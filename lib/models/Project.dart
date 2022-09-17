@@ -1,14 +1,33 @@
+import 'dbEntity.dart';
 import 'IDetail.dart';
 
-class IProject
+class IProject implements DbEntity
 {
-  Map<IDetail, int> _details = {};
   String name = "";
   String description = "";
+  Map<IDetail, int> _details = {};
   List<String> _files = [];
 
   Map<IDetail, int> get details => _details;
   List<String> get files => _files;
+
+  @override
+  int? id;
+
+  @override
+  String get Table => "Projects";
+
+  @override
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic>{
+      "id": id,
+      "name": name,
+      "description": description,
+      "details": details,
+      "files": files
+    };
+    return map;
+  }
 
   IProject(this.name, this.description);
 

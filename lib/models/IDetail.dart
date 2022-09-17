@@ -1,35 +1,93 @@
-import 'package:electronic_projects/database/controllers/database.dart';
+import 'package:electronic_projects/models/dbEntity.dart';
 
-class IDetailType{
-  String name;
-  String? icon;
+class IDetailType implements DbEntity {
+  late String name;
+  late String? icon;
 
-  IDetailType.fromName(this.name);
+  @override
+  int? id;
+  @override
+  String get Table => "DetailType";
 
+  IDetailType({required this.name, this.icon});
 
-  factory IDetailType(String name){
-    IDetailType res = IDetailType.fromName(name);
-    return res;
+  @override
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic>{
+      "id": id,
+      "name": name,
+      "icon": icon
+    };
+    return map;
+  }
+
+  IDetailType.fromMap(Map map){
+    id = map["id"];
+    name = map["name"];
+    icon = map["icon"];
   }
 }
 
-class IDetailParemeter{
-  String name;
-  String value;
-  String unit;
-  IDetailParemeter(this.name, this.value, this.unit);
+class IDetailParemeter implements DbEntity{
+  String name = "";
+  String value = "";
+  String? unit = "";
+  IDetailParemeter({required this.name, required this.value, this.unit});
+
+  @override
+  int? id;
+  @override
+  String get Table => "DetailParameter";
+
+  IDetailParemeter.fromMap(Map map){
+    id = map["id"];
+    name = map["name"];
+    value = map["value"];
+    unit = map["unit"];
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic>{
+      "id": id,
+      "name": name,
+      "value": value,
+      "unit": unit
+    };
+    return map;
+  }
 }
 
-class IDetail
+class IDetail implements DbEntity
 {
-  String name;
-  IDetailType type;
-  List<IDetailParemeter> parameters;
+  String name = "Ddetaill";
+  IDetailType type = IDetailType(name: "Unknown");
+  List<IDetailParemeter> parameters = [];
   List<String>? datasheets = [];
+  @override
+  int? id;
+  @override
+  String get Table => "Detail";
 
-  IDetail(this.name, this.type, this.parameters, {this.datasheets});
+  IDetail({required this.name, required this.type, required this.parameters, this.datasheets});
 
-  factory IDetail.fromJson(Map<String, dynamic> json){
-    return IDetail(json['name'], json['type'], []);
+  IDetail.fromMap(Map map){
+    id = map["id"];
+    name = map["name"];
+    type = map["value"];
+    parameters = map["unit"];
+    datasheets = map["datasheets"];
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic>{
+      "id": id,
+      "name": name,
+      "type": type,
+      "parameters": parameters,
+      "datasheets": datasheets
+    };
+    return map;
   }
 }
