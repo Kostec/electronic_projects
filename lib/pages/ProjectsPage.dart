@@ -1,10 +1,13 @@
-import 'package:electronic_projects/database/dbScheme.dart';
+import 'dart:io';
+import 'package:electronic_projects/controllers/dbController.dart';
 import 'package:electronic_projects/models/IDetail.dart';
 import 'package:flutter/material.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_io.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/Project.dart';
 import 'ProjectPage.dart';
-import '../controllers/dbController.dart';
 
 class ProjectsPage extends StatefulWidget {
   const ProjectsPage({Key? key, required this.title}) : super(key: key);
@@ -16,36 +19,31 @@ class ProjectsPage extends StatefulWidget {
 }
 
 class ProjectsPageState extends State<ProjectsPage> {
-
-  List<IProject> projects = [];
-  late DatabaseController db;
-
   void stub() async {
-    
-    var d = IDetailType(name: "resistor");
-    d.toMap();
+    Directory tmp = await getTemporaryDirectory();
+    String tmpDir = tmp.path;
+    String dbPath = "$tmpDir/Electronic.db";
+    DatabaseFactory dbFactory = databaseFactoryIo;
+    Database db = await dbFactory.openDatabase(dbPath);
 
-    IProject project = IProject("project1", "my first project");
-    project.addDetail(IDetail(
-      name: "Detail1",
-      type: IDetailType(name: "resistor"),
-      parameters:[
-        IDetailParemeter(name: "Resistance", value: "10", unit: "Om"),
-        IDetailParemeter(name: "Max power", value: "2.5", unit: "Wh"),
-      ],
-      datasheets: []
-    )
-    );
-    projects.add(project);
+    DatabaseController dbController = DatabaseController(db);
+    await dbController.initialize();
+
+    dbController.detailTypes.list.add(IDetailType(name: 'Reistor'));
+    dbController.detailTypes.list.add(IDetailType(name: 'Capaitor'));
+    dbController.detailTypes.list.add(IDetailType(name: 'Inductor'));
+    dbController.detailTypes.list.add(IDetailType(name: 'Wire'));
+
+    setState(() {});
   }
 
   @override
   void initState() {
+    super.initState();
     stub();
   }
 
-  void _addProject()
-  {
+  void _addProject() {
     String? name = "";
     String? description = "";
 
@@ -71,7 +69,10 @@ class ProjectsPageState extends State<ProjectsPage> {
               onChanged: (s) => description = s,
             ),
             OutlinedButton(onPressed: () async {
-              setState(()=>{projects.add(IProject(name!, description!))});
+              var newProject = IProject(name!, description!);
+              databaseController?.projects.list.add(newProject);
+              databaseController?.projects.update(newProject);
+              setState(()=>{});
               Navigator.of(context).pop();
             }, child: Text("Create")),
             OutlinedButton(onPressed: () => { Navigator.of(context).pop() }, child: Text("Cancel")),
@@ -86,23 +87,34 @@ class ProjectsPageState extends State<ProjectsPage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Container(
+      body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Container(
-              height: 300,
-              padding: EdgeInsets.all(5.0),
-              child: ListView.separated(
-                itemCount: projects.length,
-                separatorBuilder: (BuildContext context, int index) => const Divider(),
-                itemBuilder: (BuildContext context, int index) {
-                  var project= projects[index];
-                  return ListTile(
-                      title: Text(project.name),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => new ProjectPage(project: project))),
-                      dense: false,
-                    );
-                }
+              height: 600,
+              padding: const EdgeInsets.all(5.0),
+              child:
+              Expanded(
+                child: ListView.separated(
+                  itemCount: databaseController == null ? 0 : databaseController!.projects.list.length,
+                  separatorBuilder: (BuildContext context, int index) => const Divider(),
+                  itemBuilder: (BuildContext context, int index) {
+                    var project= databaseController!.projects.list[index];
+                    return ListTile(
+                        title: Text(project.name),
+                        trailing: OutlinedButton(
+                          child: Text('delete'),
+                          onPressed: (){
+                            databaseController?.projects.list.remove(project);
+                            databaseController?.projects.update(project);
+                            setState(() {});
+                          },
+                        ),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => new ProjectPage(project: project))),
+                        dense: false,
+                      );
+                  }
+                ),
               ),
             ),
           ],
@@ -110,7 +122,7 @@ class ProjectsPageState extends State<ProjectsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addProject,
-        tooltip: 'Increment',
+        tooltip: 'Add project',
         child: const Icon(Icons.add),
       ), //
     );

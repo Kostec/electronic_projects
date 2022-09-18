@@ -1,12 +1,8 @@
-import 'package:electronic_projects/database/dbScheme.dart';
 import 'package:flutter/foundation.dart';
 
 class DbEntity{
   int? id;
   DbEntity({this.id});
-
-  @protected
-  String get Table => "Entity";
 
   DbEntity.fromMap(Map<String, dynamic> map) {
     id = map['id'];

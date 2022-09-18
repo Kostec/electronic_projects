@@ -1,10 +1,10 @@
-import 'dart:convert';
-
+import 'package:electronic_projects/controllers/dbController.dart';
 import 'package:electronic_projects/widgets/DetailWidget.dart';
 import 'package:flutter/material.dart';
 
 import '../models/IDetail.dart';
 import '../models/Project.dart';
+import 'DetailPage.dart';
 
 class ProjectPage extends StatefulWidget {
   const ProjectPage({Key? key, required this.project}) : super(key: key);
@@ -23,16 +23,14 @@ enum projectPageState {
 
 class ProjectPageState extends State<ProjectPage> {
   late final IProject project;
-  Widget body = Container();
+  late Widget Function() getBody = getMain;
 
   @override
   void initState() {
     project = widget.project;
-    body = getMain();
   }
 
-  Widget getDetails()
-  {
+  Widget getDetails() {
     return ListView.separated(
         itemCount: project.details.length,
         itemBuilder: (BuildContext context, int i){
@@ -55,8 +53,18 @@ class ProjectPageState extends State<ProjectPage> {
     );
   }
 
+  void addDetail() async{
+    IDetail? detail = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => DetailPage()));
+    if (detail == null){
+      return;
+    }s
+    project.details[detail!] = 1;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    Widget body = getBody();
     return Scaffold(
       appBar: AppBar(
         title: Text(project.name),
@@ -72,7 +80,7 @@ class ProjectPageState extends State<ProjectPage> {
               title: Text("Main"),
               onTap: (){/* TODO open details list */
                 setState(() {
-                  body = getMain();
+                  getBody = getMain;
                 });
                 Navigator.of(context).pop();
               },
@@ -81,16 +89,16 @@ class ProjectPageState extends State<ProjectPage> {
               title: Text("Details"),
               onTap: (){/* TODO open details list */
                 setState((){
-                  body = getDetails();
+                  getBody = getDetails;
                 });
                 Navigator.of(context).pop();
               },
             ),
             ListTile(
               title: Text("Files"),
-              onTap: (){/* TODO open details list */
+              onTap: (){/* TODO open file list */
                 setState((){
-                  body = getDetails();
+                  getBody = getDetails;
                 });
                 Navigator.of(context).pop();
               },
@@ -99,6 +107,11 @@ class ProjectPageState extends State<ProjectPage> {
         ),
       ),
       body: body,
+      floatingActionButton: FloatingActionButton(
+        onPressed: addDetail,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

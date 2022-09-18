@@ -14,16 +14,42 @@ class IProject implements DbEntity
   @override
   int? id;
 
-  @override
-  String get Table => "Projects";
+  IProject.fromMap(Map map){
+    if (map['details'] != null) {
+      for (var d in map['details'] as List) {
+        var detail = IDetail.fromMap(d);
+        if (details.containsKey(detail)) {
+          details[detail] = details[detail]! + 1;
+        }
+        else {
+          details[detail] = 1;
+        }
+      }
+    }
+
+    id = map['id'];
+    name = map['name'];
+    description = map['description'];
+    if(map['files'] != null) {
+      for (var f in map['files'] as List) {
+        _files.add(f);
+      }
+    }
+  }
 
   @override
   Map<String, dynamic> toMap() {
+
+    List<Map<String, dynamic>> detailsMap = [];
+    details.forEach((key, value) {
+      detailsMap.add(key.toMap());
+    });
+
     var map = <String, dynamic>{
       "id": id,
       "name": name,
       "description": description,
-      "details": details,
+      "details": detailsMap,
       "files": files
     };
     return map;

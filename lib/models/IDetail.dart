@@ -3,6 +3,7 @@ import 'package:electronic_projects/models/dbEntity.dart';
 class IDetailType implements DbEntity {
   late String name;
   late String? icon;
+  late String? description;
 
   @override
   int? id;
@@ -16,7 +17,8 @@ class IDetailType implements DbEntity {
     var map = <String, dynamic>{
       "id": id,
       "name": name,
-      "icon": icon
+      "icon": icon,
+      "description" : description
     };
     return map;
   }
@@ -25,6 +27,7 @@ class IDetailType implements DbEntity {
     id = map["id"];
     name = map["name"];
     icon = map["icon"];
+    description = map["description"];
   }
 }
 
@@ -36,8 +39,6 @@ class IDetailParemeter implements DbEntity{
 
   @override
   int? id;
-  @override
-  String get Table => "DetailParameter";
 
   IDetailParemeter.fromMap(Map map){
     id = map["id"];
@@ -74,18 +75,30 @@ class IDetail implements DbEntity
   IDetail.fromMap(Map map){
     id = map["id"];
     name = map["name"];
-    type = map["value"];
-    parameters = map["unit"];
-    datasheets = map["datasheets"];
+    type = IDetailType.fromMap(map["type"]);
+
+    if (map["datasheets"] != null){
+      for(var ds in map["datasheets"] as List){
+        datasheets!.add(ds);
+      }
+    }
+    for (var element in (map["parameters"] as List)) {
+      parameters.add(IDetailParemeter.fromMap(element));
+    }
   }
 
   @override
   Map<String, dynamic> toMap() {
+    List<Map<String, dynamic>> parametersMap = [];
+    parameters.forEach((value) {
+      parametersMap.add(value.toMap());
+    });
+
     var map = <String, dynamic>{
       "id": id,
       "name": name,
-      "type": type,
-      "parameters": parameters,
+      "type": type.toMap(),
+      "parameters": parametersMap,
       "datasheets": datasheets
     };
     return map;

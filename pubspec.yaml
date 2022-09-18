@@ -36,6 +36,9 @@ dependencies:
   http:
   path:
   sqflite:
+  sembast: ^3.3.0
+  path_provider: ^2.0.11
+
 
 
 dev_dependencies:
