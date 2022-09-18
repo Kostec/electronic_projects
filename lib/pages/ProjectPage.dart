@@ -57,7 +57,7 @@ class ProjectPageState extends State<ProjectPage> {
     IDetail? detail = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => DetailPage()));
     if (detail == null){
       return;
-    }s
+    }
     project.details[detail!] = 1;
     setState(() {});
   }

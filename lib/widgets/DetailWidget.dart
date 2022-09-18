@@ -19,15 +19,13 @@ class DetailWidgetState extends State<DetailWidget>{
 
   Widget getParameters(){
     return Container(
-      // width: 300,
       height: 300,
         child: ListView.separated(
         itemBuilder: (BuildContext context, int idx){
           var parameter = _detail.parameters[idx];
-          return Row(
-              children: [
-                Text("${parameter.name}: ${parameter.value} ${parameter.unit}"),
-              ]
+          return ListTile(
+            title: Text(parameter.name),
+            subtitle: Text('${parameter.value} ${parameter.unit}'),
           );
         },
         separatorBuilder: (BuildContext context, int idx) => const Divider(),
@@ -40,19 +38,21 @@ class DetailWidgetState extends State<DetailWidget>{
     return Card(
       child: ListTile(
         onTap: () => setState(() {_expanded = !_expanded;}),
-        title: Column(
-          children: [
-            Row(
-              children: [
-                // if (_detail.type.icon == null) Text(_detail.type.name) else const Icon(Icons.add),
-                Icon(Icons.add),
-                Text(_detail.name),
-              ],
-            ),
-            _expanded ? getParameters() : Container()
-          ],
-        )
-      ),
+        leading: Icon(Icons.add),
+        title: Text(_detail.name),
+        subtitle: _expanded ? getParameters() : null,
+        trailing: OutlinedButton(
+          child: Text('Delete'),
+          onPressed: (){
+            // TODO action to delete detail
+            print('delete');
+          }
+        ),
+        onLongPress: () async {
+          // TODO open detail page to edit
+          print('edit');
+        },
+      )
     );
   }
 }
