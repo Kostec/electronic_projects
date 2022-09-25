@@ -1,9 +1,12 @@
 import 'package:electronic_projects/models/IDetail.dart';
+import 'package:electronic_projects/pages/AddPages/DetailPage.dart';
 import 'package:flutter/material.dart';
 
 class DetailWidget extends StatefulWidget{
   IDetail detail;
-  DetailWidget(this.detail, {Key? key}) : super(key: key);
+  final void Function(IDetail detail)? removeDetail;
+  final void Function(IDetail detail)? selectCallback;
+  DetailWidget(this.detail, {this.removeDetail, this.selectCallback, Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => DetailWidgetState();
@@ -35,24 +38,19 @@ class DetailWidgetState extends State<DetailWidget>{
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        onTap: () => setState(() {_expanded = !_expanded;}),
-        leading: Icon(Icons.add),
-        title: Text(_detail.name),
-        subtitle: _expanded ? getParameters() : null,
-        trailing: OutlinedButton(
-          child: Text('Delete'),
-          onPressed: (){
-            // TODO action to delete detail
-            print('delete');
-          }
-        ),
-        onLongPress: () async {
-          // TODO open detail page to edit
-          print('edit');
-        },
-      )
+    return ListTile(
+      onTap: () {
+        widget.selectCallback!(_detail);
+        Navigator.of(context).pop(_detail);
+      },
+      title: Text(_detail.name),
+      trailing: widget.removeDetail == null ? null : OutlinedButton(
+        child: Text('Delete'),
+        onPressed: () => widget.removeDetail!(_detail)
+      ),
+      onLongPress: () async {
+        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => DetailPage(detail: _detail,)));
+      },
     );
   }
 }

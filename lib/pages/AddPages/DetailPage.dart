@@ -1,21 +1,25 @@
-import 'dart:convert';
-import 'dart:ffi';
-
 import 'package:electronic_projects/controllers/dbController.dart';
+import 'package:electronic_projects/pages/AddPages/DetailParameter.dart';
+import 'package:electronic_projects/pages/AddPages/DetailTypePage.dart';
 import 'package:flutter/material.dart';
 
-import '../models/IDetail.dart';
+import '../../models/IDetail.dart';
 
 class DetailPage extends StatefulWidget {
-  const DetailPage({Key? key}) : super(key: key);
+  final IDetail? detail;
+  const DetailPage({Key? key, this.detail}) : super(key: key);
 
   @override
   State<DetailPage> createState() => DetailPageState();
 }
 
 class DetailPageState extends State<DetailPage> {
-  late String name;
+  late IDetail _detail;
+
+  late String name = "";
   late List<IDetailParemeter> parameters = [];
+  late List<IDetailParemeter> recParams = [];
+  late List<IDetailParemeter> allParams = [];
   late List<String> datasheets = [];
   late IDetailType? type;
   int selectedIndex = 0;
@@ -23,11 +27,23 @@ class DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     type = databaseController?.detailTypes.list.first;
+    if (widget.detail != null) {
+        name = widget.detail!.name;
+        parameters = widget.detail!.parameters;
+        datasheets = widget.detail!.datasheets != null ? widget.detail!.datasheets! : [];
+        type = widget.detail!.type;
+        _detail = widget.detail!;
+    }
+    else {
+      _detail = IDetail(name: name, type: type!, parameters: parameters);
+    }
+    checkRecommendedParams();
   }
 
   void addParameter(){
-    // TODO open dialog for params
-    parameters.add(IDetailParemeter(name: "Parameter", value: "10"));
+    IDetailParemeter detailParemeter = IDetailParemeter(name: "Parameter", value: "10");
+    parameters.add(detailParemeter);
+    allParams.add(detailParemeter);
     setState(() {});
   }
 
@@ -37,15 +53,29 @@ class DetailPageState extends State<DetailPage> {
     setState(() {});
   }
 
-  void addDetailType(){
-    IDetailType detailType = IDetailType(name: 'DetailType');
-    databaseController?.detailTypes.list.add(detailType);
+  void addDetailType() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => DetailTypePage()));
     setState(() {});
   }
 
-  void accept(){
-    IDetail detail = IDetail(name: name, type: type!, parameters: parameters);
-    Navigator.pop(context, detail);
+  void accept() async {
+    _detail!.name = name;
+    _detail!.parameters = allParams;
+    _detail!.datasheets = datasheets;
+    _detail!.type = type!;
+    await databaseController!.details.update(_detail!);
+    Navigator.pop(context, _detail);
+  }
+
+  void checkRecommendedParams(){
+    recParams.clear();
+    recParams.addAll(type!.parameters!);
+    for (var p in parameters){
+      recParams.removeWhere((e) => (e.name == p.name) && (e.id == p.id));
+    }
+    allParams.clear();
+    allParams.addAll(recParams);
+    allParams.addAll(parameters);
   }
 
   Widget getGeneral(){
@@ -58,17 +88,18 @@ class DetailPageState extends State<DetailPage> {
             OutlinedButton(onPressed: addDetailType, child: Text('NewType')),
             DropdownButtonFormField(
               value: type,
-              items: databaseController?.detailTypes.list.map((e) => DropdownMenuItem<IDetailType>(child: Text(e.name), value:  e,)).toList(),
+              items: databaseController?.detailTypes.list.map((e) => DropdownMenuItem<IDetailType>(child: Text(e.name), value:  e)).toList(),
               onChanged: (value){
                 type = value as IDetailType;
-              }
+                checkRecommendedParams();
+              },
             ),
             TextFormField(
               decoration: const InputDecoration(
               hintText: 'Resistor 10K',
               labelText: 'name',
               ),
-              initialValue: "",
+              initialValue: name,
               onChanged: (s) => name = s,
             )
           ]
@@ -77,30 +108,46 @@ class DetailPageState extends State<DetailPage> {
     );
   }
 
+  void editParameter(IDetailParemeter param) async {
+    var ret = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => DetailParameterPage(parameter: param)));
+    if (ret != null){
+      param = ret as IDetailParemeter;
+    }
+    setState(() {});
+  }
+  
+  Widget parametersList(List<IDetailParemeter> list){
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: list.length,
+      itemBuilder: (BuildContext context, int index) {
+        var item = list[index];
+        return ListTile(
+          title: Text(item.name),
+          subtitle: Text("${item.value} ${item.unit.toString()}"),
+          trailing: OutlinedButton(
+              child: Text('Delete'),
+              onPressed: () {
+                setState(() {
+                  list.remove(item);
+                });
+              }
+          ),
+          onLongPress: (){
+            editParameter(item);
+          },
+          dense: false,
+        );
+      },
+    );
+  }
+
   Widget getParameter(){
     return Container(
       height: 600,
       padding: const EdgeInsets.all(5.0),
       child: Expanded(
-        child: ListView.builder(
-          itemCount: parameters.length,
-          itemBuilder: (BuildContext context, int index) {
-            var item = parameters[index];
-            return ListTile(
-              title: Text(item.name),
-              subtitle: Text(item.value),
-              trailing: OutlinedButton(
-                child: Text('Edit'),
-                onPressed: () {
-                  setState(() {
-                    parameters.remove(item);
-                  });
-                  }
-              ),
-              dense: false,
-            );
-          }),
-      ),
+        child: parametersList(allParams)),
     );
   }
 
@@ -154,7 +201,7 @@ class DetailPageState extends State<DetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [IconButton(onPressed: accept, icon: const Icon(Icons.add))],
+        actions: [IconButton(onPressed: accept, icon: const Icon(Icons.save))],
         title: const Text("Detail"),
       ),
       bottomNavigationBar: BottomNavigationBar(

@@ -15,25 +15,29 @@ class dbEntityContainer <T>{
     // get all projects from database
     var projs = await store.find(db);
     for(var p in projs){
-      list.add(factory(await p.ref.get(db)));
+      var item = await p.ref.get(db);
+      T entity = factory(item);
+      (entity as DbEntity).id = p.ref.key;
+      list.add(entity);
     }
   }
 
-  void delete(T item) async{
+  Future<void> delete(T item) async{
     DbEntity entity = item as DbEntity;
     if (entity.id != null){
-      store.delete(db, finder: Finder(filter: Filter.equals('id', entity.id)));
+      await store.delete(db, finder: Finder(filter: Filter.byKey(entity.id)));
     }
     list.remove(item);
   }
 
-  void update(T entity) async{
+  Future<void> update(T entity) async{
     DbEntity item = entity as DbEntity;
 
     if(item.id == null){
       int key = await store.add(db, entity.toMap());
       entity.id = key;
       await store.update(db, item.toMap(), finder: Finder(filter: Filter.byKey(key)));
+      list.add(entity);
     }
     else{
       await store.update(db, item.toMap(), finder: Finder(filter: Filter.equals('id', item.id)));
@@ -46,5 +50,14 @@ class dbEntityContainer <T>{
     }
   }
 
+  void clear() async{
+    List<T> tmp = [];
+    for (var item in list){
+      tmp.add(item);
+    }
+    for (var item in tmp){
+      delete(item);
+    }
+  }
 
 }

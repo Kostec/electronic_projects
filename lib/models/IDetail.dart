@@ -1,24 +1,65 @@
+import 'package:electronic_projects/models/Units.dart';
 import 'package:electronic_projects/models/dbEntity.dart';
 
-class IDetailType implements DbEntity {
-  late String name;
-  late String? icon;
-  late String? description;
+class IDetailParemeter implements DbEntity{
+  String name = "";
+  String value = "";
+  Unit? unit;
+  late String? convention; // Условное обозначение
+  IDetailParemeter({required this.name, required this.value, this.unit, this.convention});
 
   @override
   int? id;
-  @override
-  String get Table => "DetailType";
 
-  IDetailType({required this.name, this.icon});
+  IDetailParemeter.fromMap(Map map){
+    id = map["id"];
+    name = map["name"];
+    value = map["value"];
+    convention = map["convention"];
+    // if (map.containsKey('unit')) {
+    //   unit = Unit.fromMap(map["unit"]);
+    // }
+  }
 
   @override
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       "id": id,
       "name": name,
+      "value": value,
+      "unit": unit?.toMap(),
+      "convention": convention,
+    };
+    return map;
+  }
+}
+
+class IDetailType implements DbEntity {
+  late String name;
+  late String? icon;
+  late String? description;
+  late List<IDetailParemeter> parameters = [];
+
+  @override
+  int? id;
+  @override
+  String get Table => "DetailType";
+
+  IDetailType({required this.name, this.icon, this.description});
+
+  @override
+  Map<String, dynamic> toMap() {
+    List<Map<String, dynamic>> parametersMap = [];
+    for (var item in parameters) {
+      parametersMap.add(item.toMap());
+    }
+
+    var map = <String, dynamic>{
+      "id": id,
+      "name": name,
       "icon": icon,
-      "description" : description
+      "description" : description,
+      "parameters" : parametersMap
     };
     return map;
   }
@@ -28,39 +69,18 @@ class IDetailType implements DbEntity {
     name = map["name"];
     icon = map["icon"];
     description = map["description"];
+
+    if (map['parameters'] != null) {
+      for (var item in map['parameters'] as List) {
+        var param = IDetailParemeter.fromMap(item);
+        parameters.add(param);
+      }
+    }
+
   }
 }
 
-class IDetailParemeter implements DbEntity{
-  String name = "";
-  String value = "";
-  String? unit = "";
-  IDetailParemeter({required this.name, required this.value, this.unit});
-
-  @override
-  int? id;
-
-  IDetailParemeter.fromMap(Map map){
-    id = map["id"];
-    name = map["name"];
-    value = map["value"];
-    unit = map["unit"];
-  }
-
-  @override
-  Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{
-      "id": id,
-      "name": name,
-      "value": value,
-      "unit": unit
-    };
-    return map;
-  }
-}
-
-class IDetail implements DbEntity
-{
+class IDetail implements DbEntity {
   String name = "Ddetaill";
   IDetailType type = IDetailType(name: "Unknown");
   List<IDetailParemeter> parameters = [];

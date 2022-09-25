@@ -7,40 +7,19 @@ import 'package:sembast/sembast_io.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/Project.dart';
-import 'ProjectPage.dart';
+import 'AddPages/ProjectPage.dart';
 
 class ProjectsPage extends StatefulWidget {
-  const ProjectsPage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const ProjectsPage({Key? key}) : super(key: key);
 
   @override
   State<ProjectsPage> createState() => ProjectsPageState();
 }
 
 class ProjectsPageState extends State<ProjectsPage> {
-  void stub() async {
-    Directory tmp = await getTemporaryDirectory();
-    String tmpDir = tmp.path;
-    String dbPath = "$tmpDir/Electronic.db";
-    DatabaseFactory dbFactory = databaseFactoryIo;
-    Database db = await dbFactory.openDatabase(dbPath);
-
-    DatabaseController dbController = DatabaseController(db);
-    await dbController.initialize();
-
-    dbController.detailTypes.list.add(IDetailType(name: 'Reistor'));
-    dbController.detailTypes.list.add(IDetailType(name: 'Capaitor'));
-    dbController.detailTypes.list.add(IDetailType(name: 'Inductor'));
-    dbController.detailTypes.list.add(IDetailType(name: 'Wire'));
-
-    setState(() {});
-  }
-
   @override
   void initState() {
     super.initState();
-    stub();
   }
 
   void _addProject() {
@@ -70,7 +49,6 @@ class ProjectsPageState extends State<ProjectsPage> {
             ),
             OutlinedButton(onPressed: () async {
               var newProject = IProject(name!, description!);
-              databaseController?.projects.list.add(newProject);
               databaseController?.projects.update(newProject);
               setState(()=>{});
               Navigator.of(context).pop();
@@ -85,7 +63,7 @@ class ProjectsPageState extends State<ProjectsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Projects"),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -104,9 +82,8 @@ class ProjectsPageState extends State<ProjectsPage> {
                         title: Text(project.name),
                         trailing: OutlinedButton(
                           child: Text('delete'),
-                          onPressed: (){
-                            databaseController?.projects.list.remove(project);
-                            databaseController?.projects.update(project);
+                          onPressed: () async {
+                            await databaseController?.projects.delete(project);
                             setState(() {});
                           },
                         ),

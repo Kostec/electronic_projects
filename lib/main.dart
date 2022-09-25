@@ -1,3 +1,4 @@
+import 'package:electronic_projects/pages/MainPage.dart';
 import 'package:electronic_projects/pages/ProjectsPage.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const ProjectsPage(title: "My projects"),
+      home: const MainPage(title: "Main"),
     );
   }
 }
