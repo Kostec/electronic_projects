@@ -49,7 +49,7 @@ class ProjectsPageState extends State<ProjectsPage> {
             ),
             OutlinedButton(onPressed: () async {
               var newProject = IProject(name!, description!);
-              databaseController?.projects.update(newProject);
+              await databaseController?.projects.update(newProject);
               setState(()=>{});
               Navigator.of(context).pop();
             }, child: Text("Create")),
@@ -57,6 +57,7 @@ class ProjectsPageState extends State<ProjectsPage> {
           ],
         )
     );
+    setState(() {});
   }
 
   @override
