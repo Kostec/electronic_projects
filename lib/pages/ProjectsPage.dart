@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'package:electronic_projects/controllers/dbController.dart';
-import 'package:electronic_projects/models/IDetail.dart';
 import 'package:flutter/material.dart';
-import 'package:sembast/sembast.dart';
-import 'package:sembast/sembast_io.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path/path.dart' as path;
 
 import '../models/Project.dart';
 import 'AddPages/ProjectPage.dart';
@@ -24,7 +22,6 @@ class ProjectsPageState extends State<ProjectsPage> {
 
   void _addProject() {
     String? name = "";
-    String? description = "";
 
     showDialog(
       context: context,
@@ -39,16 +36,8 @@ class ProjectsPageState extends State<ProjectsPage> {
               initialValue: "",
               onChanged: (s) => name = s
             ),
-            TextFormField(
-              decoration: const InputDecoration(
-                hintText: 'Guitar apmfilter',
-                labelText: 'Project description',
-              ),
-              initialValue: "",
-              onChanged: (s) => description = s,
-            ),
             OutlinedButton(onPressed: () async {
-              var newProject = IProject(name!, description!);
+              var newProject = IProject(name!, "");
               await databaseController?.projects.update(newProject);
               setState(()=>{});
               Navigator.of(context).pop();
@@ -84,6 +73,17 @@ class ProjectsPageState extends State<ProjectsPage> {
                         trailing: OutlinedButton(
                           child: Text('delete'),
                           onPressed: () async {
+                            String projectsPath = "/storage/emulated/0/ElectronicProjects/Projects";
+                            Directory projectDir = Directory(path.join(projectsPath, '${project.name}_${project.id}'));
+                            PermissionStatus status = await Permission.storage.request();
+                            if (status.isDenied) {
+                              /* TODO error */
+                              return;
+                            }
+                            else if(await projectDir.exists()){
+                              projectDir.delete(recursive: true);
+                            }
+
                             await databaseController?.projects.delete(project);
                             setState(() {});
                           },

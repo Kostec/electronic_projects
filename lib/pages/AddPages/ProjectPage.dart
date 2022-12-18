@@ -1,9 +1,16 @@
+import 'dart:io';
+
 import 'package:electronic_projects/controllers/dbController.dart';
 import 'package:electronic_projects/models/IDetail.dart';
 import 'package:electronic_projects/models/Project.dart';
 import 'package:electronic_projects/pages/DetailsPage.dart';
 import 'package:electronic_projects/widgets/DetailWidget.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_filex/open_filex.dart';
 
 import 'DetailPage.dart';
 
@@ -25,11 +32,56 @@ enum projectPageState {
 class ProjectPageState extends State<ProjectPage> {
   late final IProject project;
   late Widget Function() getBody = getMain;
+  late void Function() addAction;
   bool edit = false;
 
   @override
   void initState() {
     project = widget.project;
+    addAction = addDetail;
+  }
+
+  Widget getFiles() {
+    return ListView.separated(
+      separatorBuilder: (BuildContext context, int index) => const Divider(),
+      itemCount: project.files.length,
+      itemBuilder: (BuildContext context, int i){
+        String file = project.files[i];
+        String name = p.basename(file);
+        String ext = p.extension(file).toUpperCase();
+        return ListTile(
+          title: Text(name),
+          subtitle: Text(ext),
+          onTap: () async{
+            File f = File(file);
+            if (await f.exists()) {
+              OpenFilex.open(file);
+            }
+          },
+          trailing: OutlinedButton(
+              child: Text('Delete'),
+              onPressed: () async {
+                String projectsPath = "/storage/emulated/0/ElectronicProjects/Projects";
+                Directory projectDir = Directory(p.join(projectsPath, '${project.name}_${project.id}'));
+                PermissionStatus status = await Permission.storage.request();
+                if (status.isDenied) {
+                  /* TODO error */
+                  return;
+                }
+                else {
+                  File f = File(file);
+                  if ((await f.exists())) {
+                    await f.delete();
+                  }
+                }
+                project.files.remove(file);
+                await databaseController?.projects.update(project);
+                setState(() { });
+              }
+          ),
+        );
+      },
+    );
   }
 
   Widget getDetails() {
@@ -90,6 +142,43 @@ class ProjectPageState extends State<ProjectPage> {
     setState(() {});
   }
 
+  void addFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
+
+    if (result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+
+      Directory tmp = await getTemporaryDirectory();
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String tmpDir = p.join(appDocDir.path, '${project.name}_${project.id}');
+
+      String projectsPath = "/storage/emulated/0/ElectronicProjects/Projects";
+      Directory projectDir = Directory(p.join(projectsPath, '${project.name}_${project.id}'));
+      if (!(await projectDir.exists())) {
+        PermissionStatus status = await Permission.storage.request();
+        if (status.isDenied) {
+          /* TODO error */
+          return;
+        }
+        projectDir = await projectDir.create(recursive: true);
+      }
+
+      for (var f in files) {
+        String newPath = p.join(projectDir.path, p.basename(f.path));
+        File newFile = await f.copy(newPath);
+        print(newFile.path);
+        project.files.add(newFile.path);
+      }
+
+      await databaseController?.projects.update(project);
+      setState(() { });
+
+    } else {
+      // User canceled the picker
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     Widget body = getBody();
@@ -126,6 +215,7 @@ class ProjectPageState extends State<ProjectPage> {
               onTap: (){/* TODO open details list */
                 setState((){
                   getBody = getDetails;
+                  addAction = addDetail;
                 });
                 Navigator.of(context).pop();
               },
@@ -134,7 +224,8 @@ class ProjectPageState extends State<ProjectPage> {
               title: Text("Files"),
               onTap: (){/* TODO open file list */
                 setState((){
-                  getBody = getDetails;
+                  getBody = getFiles;
+                  addAction = addFile;
                 });
                 Navigator.of(context).pop();
               },
@@ -150,7 +241,7 @@ class ProjectPageState extends State<ProjectPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: addDetail,
+        onPressed: addAction,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),

@@ -26,7 +26,12 @@ class DetailPageState extends State<DetailPage> {
 
   @override
   void initState() {
-    type = databaseController?.detailTypes.list.first;
+    if (databaseController!.detailTypes.list.isNotEmpty) {
+      type = databaseController?.detailTypes.list.first;
+    }
+    else {
+      type = null;
+    }
     if (widget.detail != null) {
         name = widget.detail!.name;
         parameters = widget.detail!.parameters;

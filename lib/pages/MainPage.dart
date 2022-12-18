@@ -23,6 +23,9 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
+  late List<Widget Function()> _bodyBuilders;
+
   void stub() async {
     Directory tmp = await getTemporaryDirectory();
     String tmpDir = tmp.path;
@@ -32,51 +35,83 @@ class MainPageState extends State<MainPage> {
 
     DatabaseController dbController = DatabaseController(db);
     await dbController.initialize();
-
-    // dbController.units.clear();
-    // dbController.projects.clear();
-    // dbController.details.clear();
-    // dbController.detailTypes.clear();
-
     setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = 0;
+
+    _bodyBuilders = [
+      homeTab,
+      searchTab,
+      userTab
+    ];
     stub();
+  }
+
+  Widget homeTab() {
+    return SingleChildScrollView(
+      child: ListView(
+        padding: const EdgeInsets.all(5.0),
+        shrinkWrap: true,
+        children: [
+          ListTile(
+            title: Text("Projects"),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ProjectsPage())),
+          ),
+          ListTile(
+            title: Text("Details"),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailsPage())),
+          ),
+          ListTile(
+            title: Text("Types"),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailTypesPage())),
+          ),
+          ListTile(
+            title: Text("Units"),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => UnitsPage())),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget searchTab(){
+    return const SingleChildScrollView(
+      child: const Text("Search"),
+    );
+  }
+
+  Widget userTab(){
+    return const SingleChildScrollView(
+      child: const Text("User"),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget body = _bodyBuilders[_selectedIndex]();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: SingleChildScrollView(
-        child: ListView(
-          padding: const EdgeInsets.all(5.0),
-          shrinkWrap: true,
-          children: [
-            ListTile(
-              title: Text("Projects"),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ProjectsPage())),
-            ),
-            ListTile(
-              title: Text("Details"),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailsPage())),
-            ),
-            ListTile(
-              title: Text("Types"),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailTypesPage())),
-            ),
-            ListTile(
-              title: Text("Units"),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => UnitsPage())),
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+          BottomNavigationBarItem(icon: Icon(Icons.supervisor_account_rounded), label: "Profile"),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: (int index)=>{
+          setState((){
+            _selectedIndex = index;
+          })
+        },
       ),
+      body: body,
     );
   }
 }
