@@ -84,6 +84,9 @@ class DetailPageState extends State<DetailPage> {
   }
 
   Widget getGeneral(){
+    List<IDetailType> detailTypes = [];
+    detailTypes.add(_detail.type);
+    detailTypes.addAll(databaseController?.detailTypes.list as Iterable<IDetailType>);
     return Container(
       height: 600,
       padding: const EdgeInsets.all(5.0),
@@ -93,7 +96,7 @@ class DetailPageState extends State<DetailPage> {
             OutlinedButton(onPressed: addDetailType, child: Text('NewType')),
             DropdownButtonFormField(
               value: type,
-              items: databaseController?.detailTypes.list.map((e) => DropdownMenuItem<IDetailType>(child: Text(e.name), value:  e)).toList(),
+              items: detailTypes.map((e) => DropdownMenuItem<IDetailType>(child: Text(e.name), value:  e)).toList(),
               onChanged: (value){
                 type = value as IDetailType;
                 checkRecommendedParams();

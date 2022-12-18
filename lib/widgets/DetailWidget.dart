@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class DetailWidget extends StatefulWidget{
   IDetail detail;
   final void Function(IDetail detail)? removeDetail;
-  final void Function(IDetail detail)? selectCallback;
+  final Future<void> Function(IDetail detail)? selectCallback;
   DetailWidget(this.detail, {this.removeDetail, this.selectCallback, Key? key}) : super(key: key);
 
   @override
@@ -39,8 +39,8 @@ class DetailWidgetState extends State<DetailWidget>{
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onTap: () {
-        widget.selectCallback!(_detail);
+      onTap: () async {
+        await widget.selectCallback!(_detail);
         Navigator.of(context).pop(_detail);
       },
       title: Text(_detail.name),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:electronic_projects/controllers/dbController.dart';
 import 'package:electronic_projects/models/IDetail.dart';
+import 'package:electronic_projects/pages/AddPages/DetailPage.dart';
 import 'package:electronic_projects/pages/DetailTypesPage.dart';
 import 'package:electronic_projects/pages/DetailsPage.dart';
 import 'package:electronic_projects/pages/ProjectsPage.dart';
@@ -63,7 +64,11 @@ class MainPageState extends State<MainPage> {
           ),
           ListTile(
             title: Text("Details"),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailsPage())),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailsPage(
+              // selectCallback: (IDetail d) async {
+              //   await Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => DetailPage(detail: d)));
+              // },
+            ))),
           ),
           ListTile(
             title: Text("Types"),
